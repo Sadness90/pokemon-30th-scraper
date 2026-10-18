@@ -1,0 +1,30 @@
+name: Aggiornamento Giornaliero Prezzi Pokémon
+on:
+  workflow_dispatch: # Ti permette di avviare il test cliccando un bottone quando vuoi tu
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Verifica codice
+      uses: actions/checkout@v4
+      
+    - name: Configura Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        
+    - name: Installa librerie
+      run: |
+        pip install requests beautifulsoup4
+        
+    - name: Esegui lo Scraping dei prezzi
+      run: python scraper.py
+      
+    - name: Salva e pubblica il file dei prezzi
+      run: |
+        git config --global user.name 'Scraper Bot'
+        git config --global user.name 'bot@scraper.com'
+        git add prezzi_pokemon.json
+        git commit -m "Aggiornamento automatico prezzi Cardmarket" || exit 0
+        git push
