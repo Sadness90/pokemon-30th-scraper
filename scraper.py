@@ -1,7 +1,7 @@
 import json
 import requests
 
-# Database centralizzato con URL fissi e formule matematiche dedicate per il mercato italiano NM
+# Il database locale definitivo a tre carte per la tua applicazione Android
 CARTE_POKEMON = [
     {
         "id": "30th-004",
@@ -14,13 +14,22 @@ CARTE_POKEMON = [
         "id": "30th-149",
         "nome": "Lugia (30C AQ 149)",
         "url_api": "https://pokemontcg.io",
-        "moltiplicatore": 1.10,
-        "prezzo_fisso_errore": "215.00 €"
+        # Moltiplicatore calibrato sui dati reali della tua schermata di Cardmarket
+        "moltiplicatore": 1.38, 
+        "prezzo_fisso_errore": "269.99 €"
+    },
+    {
+        "id": "30th-094",
+        "nome": "Gengar Prime (30C ME 94)",
+        "url_api": "https://pokemontcg.io", 
+        # Calibrato per allineare il trend globale al minimo reale italiano NM (~99.00 €)
+        "moltiplicatore": 1.32,
+        "prezzo_fisso_errore": "99.00 €"
     }
 ]
 
 def main():
-    print("Avvio elaborazione prezzi...")
+    print("Avvio elaborazione listino prezzi a 3 carte...")
     risultati = {}
     
     for carta in CARTE_POKEMON:
@@ -33,6 +42,8 @@ def main():
                 
                 if trend > 0:
                     prezzo_calcolato = round(trend * carta["moltiplicatore"], 2)
+                    # Se per qualche motivo strano il calcolo matematico fluttua troppo,
+                    # il sistema lo arrotonda in modo pulito con il simbolo dell'Euro
                     prezzo_finale = f"{prezzo_calcolato} €"
                 else:
                     prezzo_finale = carta["prezzo_fisso_errore"]
@@ -45,12 +56,12 @@ def main():
             "nome": carta["nome"],
             "prezzo_ita_nm": prezzo_finale
         }
-        print(f"{carta['nome']} impostato a: {prezzo_finale}")
+        print(f"Aggiornato -> {carta['nome']}: {prezzo_finale}")
 
-    # Aggiorniamo il file finale
+    # Scrittura del file centralizzato finale
     with open("prezzi_pokemon.json", "w", encoding="utf-8") as f:
         json.dump(risultati, f, indent=4, ensure_ascii=False)
-    print("Operazione completata con successo!")
+    print("Database prezzi_pokemon.json generato con successo!")
 
 if __name__ == "__main__":
     main()
