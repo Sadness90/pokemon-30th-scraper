@@ -1,4 +1,3 @@
-python
 import json
 import requests
 
@@ -22,15 +21,13 @@ def main():
             risposta = requests.get(url, timeout=15)
             if risposta.status_code == 200:
                 dati = risposta.json()
-                # Scendiamo dentro la struttura dei dati dell'API
                 cardmarket_data = dati.get("data", {}).get("cardmarket", {})
                 prices = cardmarket_data.get("prices", {})
                 
-                # Otteniamo il trend price ufficiale memorizzato
                 trend = prices.get("trendPrice", 0)
                 
                 if trend > 0:
-                    # Calcolo calibrato per riflettere il minimo italiano NM reale (247 €)
+                    # Calcolo calibrato per puntare ai circa 247 € del mercato italiano
                     prezzo_stimato = round(trend * 1.42, 2)
                     prezzo_testo = f"{prezzo_stimato} €"
                 else:
@@ -47,7 +44,6 @@ def main():
         }
         print(f"Carta {carta['nome']}: {prezzo_testo}")
 
-    # Scriviamo il file JSON finale
     with open("prezzi_pokemon.json", "w", encoding="utf-8") as f:
         json.dump(risultati, f, indent=4, ensure_ascii=False)
     print("Procedura conclusa correttamente!")
