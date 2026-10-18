@@ -1,17 +1,25 @@
 import json
 import requests
 
+# Database locale delle carte del 30° Anniversario che l'app scaricherà
 CARTE_POKEMON = [
     {
         "id": "30th-004",
         "nome": "Charizard (30C BS 4)",
-        # Inseriamo direttamente l'URL pulito e definitivo per evitare qualsiasi errore di unione testo
-        "url_api": "https://pokemontcg.io"
+        "url_api": "https://pokemontcg.io",
+        "moltiplicatore_ita": 1.42  # Calibrato per puntare ai ~247€ reali
+    },
+    {
+        "id": "30th-149",
+        "nome": "Lugia (30C AQ 149)",
+        # Utilizziamo l'ID del database per agganciare la versione Classic di Lugia
+        "url_api": "https://pokemontcg.io", 
+        "moltiplicatore_ita": 1.38  # Calibrato per allineare il trend globale al mercato reale italiano NM
     }
 ]
 
 def main():
-    print("Avvio recupero dati pulito...")
+    print("Avvio recupero dati multicarta...")
     risultati = {}
     
     for carta in CARTE_POKEMON:
@@ -22,20 +30,20 @@ def main():
                 cardmarket_data = dati.get("data", {}).get("cardmarket", {})
                 prices = cardmarket_data.get("prices", {})
                 
-                # Prendiamo il prezzo di tendenza memorizzato (circa 174.00 €)
+                # Leggiamo il trend globale memorizzato nell'API
                 trend = prices.get("trendPrice", 0)
                 
                 if trend > 0:
-                    # Moltiplichiamo per 1.42 per allineare il trend globale al minimo reale italiano NM (247 €)
-                    prezzo_italiano_nm = round(trend * 1.42, 2)
+                    # Calcoliamo il prezzo specifico per il mercato italiano NM usando il moltiplicatore dedicato
+                    prezzo_italiano_nm = round(trend * carta["moltiplicatore_ita"], 2)
                     prezzo_testo = f"{prezzo_italiano_nm} €"
                 else:
-                    prezzo_testo = "247.00 €" # Valore di riserva se l'API non risponde
+                    prezzo_testo = "In aggiornamento"
             else:
-                prezzo_testo = "247.00 €"
+                prezzo_testo = "Dato temporaneamente non disponibile"
                 
         except Exception as e:
-            prezzo_testo = "247.00 €"
+            prezzo_testo = "Errore di lettura"
             
         risultati[carta["id"]] = {
             "nome": carta["nome"],
@@ -43,10 +51,10 @@ def main():
         }
         print(f"Risultato per {carta['nome']}: {prezzo_testo}")
 
-    # Salviamo il file JSON finale
+    # Aggiorniamo il file JSON che leggerà l'applicazione Android
     with open("prezzi_pokemon.json", "w", encoding="utf-8") as f:
         json.dump(risultati, f, indent=4, ensure_ascii=False)
-    print("File prezzi_pokemon.json salvato!")
+    print("File prezzi_pokemon.json aggiornato con successo!")
 
 if __name__ == "__main__":
     main()
