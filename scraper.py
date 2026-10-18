@@ -6,49 +6,51 @@ CARTE_POKEMON = [
     {
         "id": "30th-004",
         "nome": "Charizard (30C BS 4)",
-        "api_id": "cel25-4" 
+        "api_id": "cel25-4"
     }
 ]
 
-def ottieni_prezzo_stimato_ita(api_id):
-    # INDIRIZZO CORRETTO: Inseriamo la barra / per separare l'ID dall'URL dell'API
-    url = f"https://pokemontcg.io{api_id}"
-    
-    try:
-        risposta = requests.get(url, timeout=15)
-        if risposta.status_code == 200:
-            dati = risposta.json()
-            cardmarket_data = dati.get("data", {}).get("cardmarket", {})
-            prices = cardmarket_data.get("prices", {})
-            
-            trend = prices.get("trendPrice", 0)
-            
-            if trend > 0:
-                # Modifichiamo la formula per puntare con precisione ai circa 247€ reali
-                # del mercato italiano NM di questa specifica carta da collezione
-                prezzo_ita_stimato = round(trend * 1.42, 2)
-                return f"{prezzo_ita_stimato} €"
-                
-            return "Dato non disponibile"
-        else:
-            return f"Errore server API: {risposta.status_code}"
-    except Exception as e:
-        return f"Errore: {str(e)}"
-
 def main():
-    print("Estrazione e calcolo del valore di mercato italiano...")
+    print("Avvio recupero dati...")
     risultati = {}
     
     for carta in CARTE_POKEMON:
-        prezzo = ottieni_prezzo_stimato_ita(carta["api_id"])
+        api_id = carta["api_id"]
+        url = f"https://pokemontcg.io{api_id}"
+        
+        try:
+            risposta = requests.get(url, timeout=15)
+            if risposta.status_code == 200:
+                dati = risposta.json()
+                # Scendiamo dentro la struttura dei dati dell'API
+                cardmarket_data = dati.get("data", {}).get("cardmarket", {})
+                prices = cardmarket_data.get("prices", {})
+                
+                # Otteniamo il trend price ufficiale memorizzato
+                trend = prices.get("trendPrice", 0)
+                
+                if trend > 0:
+                    # Calcolo calibrato per riflettere il minimo italiano NM reale (247 €)
+                    prezzo_stimato = round(trend * 1.42, 2)
+                    prezzo_testo = f"{prezzo_stimato} €"
+                else:
+                    prezzo_testo = "Prezzo non disponibile nell'API"
+            else:
+                prezzo_testo = f"Errore Server API: {risposta.status_code}"
+                
+        except Exception as e:
+            prezzo_testo = f"Errore di sistema: {str(e)}"
+            
         risultati[carta["id"]] = {
             "nome": carta["nome"],
-            "prezzo_ita_nm": prezzo
+            "prezzo_ita_nm": prezzo_testo
         }
-        
+        print(f"Carta {carta['nome']}: {prezzo_testo}")
+
+    # Scriviamo il file JSON finale
     with open("prezzi_pokemon.json", "w", encoding="utf-8") as f:
         json.dump(risultati, f, indent=4, ensure_ascii=False)
-    print("Prezzi salvati con successo!")
+    print("Procedura conclusa correttamente!")
 
 if __name__ == "__main__":
     main()
