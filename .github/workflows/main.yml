@@ -1,6 +1,6 @@
 name: Aggiornamento Giornaliero Prezzi Pokémon
 on:
-  workflow_dispatch: # Ti permette di avviare il test cliccando un bottone quando vuoi tu
+  workflow_dispatch:
 
 jobs:
   build:
@@ -14,17 +14,22 @@ jobs:
       with:
         python-version: '3.10'
         
-    - name: Installa librerie
+    - name: Installa Google Chrome sul Server
       run: |
-        pip install requests beautifulsoup4
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
         
-    - name: Esegui lo Scraping dei prezzi
+    - name: Installa librerie Python e Selenium
+      run: |
+        pip install requests beautifulsoup4 selenium
+        
+    - name: Esegui lo Scraping con Browser Fantasma
       run: python scraper.py
       
     - name: Salva e pubblica il file dei prezzi
       run: |
         git config --global user.name 'Scraper Bot'
-        git config --global user.name 'bot@scraper.com'
+        git config --global user.email 'bot@scraper.com'
         git add prezzi_pokemon.json
-        git commit -m "Aggiornamento automatico prezzi Cardmarket" || exit 0
+        git commit -m "Aggiornamento automatico con aggiramento Cloudflare" || exit 0
         git push
